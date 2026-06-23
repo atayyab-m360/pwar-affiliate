@@ -27,39 +27,82 @@
   /* ── HERO / LOGIN ── */
   #login-screen {
     position: fixed; inset: 0; z-index: 1000;
-    display: flex; align-items: center; justify-content: center;
+    overflow-y: auto;
   }
   #hero-video {
-    position: absolute; inset: 0; width: 100%; height: 100%;
+    position: fixed; inset: 0; width: 100%; height: 100%;
     object-fit: cover; z-index: 0;
   }
   .hero-overlay {
-    position: absolute; inset: 0; background: rgba(0,0,0,0.72); z-index: 1;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.58); z-index: 1;
   }
-  .login-box {
+
+  /* Hero top section — logo + title centered in viewport */
+  .hero-top {
     position: relative; z-index: 2;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.15);
-    backdrop-filter: blur(16px);
-    border-radius: 16px;
-    padding: 48px 40px;
-    width: 100%; max-width: 420px;
-    text-align: center;
+    height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 0 24px;
   }
-  .login-logo { width: 140px; margin-bottom: 8px; }
+  .login-logo { width: 150px; margin-bottom: 16px; }
+  .hero-gold-bar {
+    width: 48px; height: 3px;
+    background: var(--gold); margin: 0 auto 20px;
+    border-radius: 2px;
+  }
   .login-org {
     color: rgba(255,255,255,0.55);
     font-size: 11px; font-weight: 600;
-    letter-spacing: 2px; text-transform: uppercase;
-    margin-bottom: 28px;
+    letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 14px;
   }
   .login-title {
-    color: #fff; font-size: 22px; font-weight: 800;
-    margin-bottom: 6px; line-height: 1.2;
+    color: #fff; font-size: 42px; font-weight: 900;
+    line-height: 1.1; margin-bottom: 12px;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.4);
   }
   .login-sub {
-    color: rgba(255,255,255,0.5); font-size: 13px;
-    margin-bottom: 32px;
+    color: rgba(255,255,255,0.55); font-size: 15px;
+    margin-bottom: 36px; font-weight: 500;
+  }
+  .scroll-hint {
+    position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    color: rgba(255,255,255,0.45); font-size: 12px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
+    animation: bounce 2s infinite;
+  }
+  .scroll-hint svg { width: 20px; height: 20px; stroke: rgba(255,255,255,0.45); }
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(6px); }
+  }
+
+  /* Sign-in panel below the fold */
+  .login-panel {
+    position: relative; z-index: 2;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 60px 24px;
+  }
+  .login-box {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    padding: 44px 40px;
+    width: 100%; max-width: 400px;
+    text-align: center;
+  }
+  .login-box-title {
+    color: #fff; font-size: 18px; font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .login-box-sub {
+    color: rgba(255,255,255,0.45); font-size: 13px;
+    margin-bottom: 28px;
   }
   .login-box input {
     width: 100%; padding: 13px 16px;
@@ -353,15 +396,29 @@
     <source src="https://www.pexels.com/download/video/31617700/" type="video/mp4" />
   </video>
   <div class="hero-overlay"></div>
-  <div class="login-box">
+
+  <!-- Hero top — full viewport, logo + title -->
+  <div class="hero-top">
     <img src="https://i.imgur.com/LpBodPi.png" alt="CORE AI" class="login-logo" />
+    <div class="hero-gold-bar"></div>
     <div class="login-org">Prince William Association of Realtors</div>
     <div class="login-title">Affiliate Command Center</div>
-    <div class="login-sub">Powered by CORE AI</div>
-    <input type="password" id="pw-input" placeholder="Enter your access code" />
-    <button class="login-btn" onclick="doLogin()">Access System</button>
-    <div class="login-error" id="login-error">Incorrect access code. Please try again.</div>
-    <div class="login-badge">Secure · Members Only</div>
+    <div class="login-sub">Powered by CORE AI &nbsp;·&nbsp; Members Only</div>
+    <div class="scroll-hint" onclick="document.getElementById('signin-panel').scrollIntoView({behavior:'smooth'})">
+      Sign In &darr;
+    </div>
+  </div>
+
+  <!-- Sign-in panel below the fold -->
+  <div class="login-panel" id="signin-panel">
+    <div class="login-box">
+      <div class="login-box-title">Member Sign In</div>
+      <div class="login-box-sub">Enter your access code to continue</div>
+      <input type="password" id="pw-input" placeholder="Enter your access code" />
+      <button class="login-btn" onclick="doLogin()">Access System</button>
+      <div class="login-error" id="login-error">Incorrect access code. Please try again.</div>
+      <div class="login-badge">Secure · Members Only</div>
+    </div>
   </div>
 </div>
 
