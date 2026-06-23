@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PWAR Affiliate Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #1A2B6B;
+    --periwinkle: #6B7FD4;
+    --gold: #F59E0B;
+    --light: #F0F2FA;
+    --border: #E5E7F5;
+    --white: #FFFFFF;
+    --dark: #111827;
+    --gray: #6B7280;
+    --green: #10B981;
+    --red: #EF4444;
+    --footer: #111111;
+  }
+
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--light); color: var(--dark); min-height: 100vh; }
+
+  /* ── HERO / LOGIN ── */
+  #login-screen {
+    position: fixed; inset: 0; z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #hero-video {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; z-index: 0;
+  }
+  .hero-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.72); z-index: 1;
+  }
+  .login-box {
+    position: relative; z-index: 2;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    backdrop-filter: blur(16px);
+    border-radius: 16px;
+    padding: 48px 40px;
+    width: 100%; max-width: 420px;
+    text-align: center;
+  }
+  .login-logo { width: 140px; margin-bottom: 8px; }
+  .login-org {
+    color: rgba(255,255,255,0.55);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+  .login-title {
+    color: #fff; font-size: 22px; font-weight: 800;
+    margin-bottom: 6px; line-height: 1.2;
+  }
+  .login-sub {
+    color: rgba(255,255,255,0.5); font-size: 13px;
+    margin-bottom: 32px;
+  }
+  .login-box input {
+    width: 100%; padding: 13px 16px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px; color: #fff;
+    font-size: 14px; font-family: inherit;
+    margin-bottom: 12px; outline: none;
+    transition: border .2s;
+  }
+  .login-box input::placeholder { color: rgba(255,255,255,0.4); }
+  .login-box input:focus { border-color: var(--gold); }
+  .login-btn {
+    width: 100%; padding: 13px;
+    background: var(--gold); color: #000;
+    border: none; border-radius: 8px;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .login-btn:hover { opacity: .88; }
+  .login-error {
+    color: #f87171; font-size: 13px;
+    margin-top: 10px; display: none;
+  }
+  .login-badge {
+    display: inline-block; margin-top: 20px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px; padding: 5px 14px;
+    color: rgba(255,255,255,0.45); font-size: 11px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+
+  /* ── APP SHELL ── */
+  #app { display: none; flex-direction: column; min-height: 100vh; }
+
+  /* ── TOP NAV ── */
+  .topnav {
+    background: var(--navy);
+    padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  }
+  .topnav-logo { display: flex; align-items: center; gap: 12px; }
+  .topnav-logo img { height: 30px; }
+  .topnav-title { color: #fff; font-size: 15px; font-weight: 700; }
+  .topnav-role {
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.8);
+    font-size: 11px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+
+  /* ── TABS ── */
+  .tab-bar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex; overflow-x: auto;
+    padding: 0 16px;
+    scrollbar-width: none;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    padding: 16px 18px; border: none; background: none;
+    font-size: 13px; font-weight: 600; color: var(--gray);
+    cursor: pointer; white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    transition: color .2s, border-color .2s;
+    font-family: inherit;
+  }
+  .tab-btn.active { color: var(--navy); border-bottom-color: var(--gold); }
+  .tab-btn:hover:not(.active) { color: var(--navy); }
+
+  /* ── CONTENT AREA ── */
+  .content { flex: 1; padding: 24px 20px; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+  /* ── SEARCH + CONTROLS ── */
+  .controls {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 20px; align-items: center;
+  }
+  .search-input {
+    flex: 1; min-width: 200px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px; font-size: 14px;
+    font-family: inherit; outline: none;
+    background: var(--white);
+    transition: border .2s;
+  }
+  .search-input:focus { border-color: var(--periwinkle); }
+  .sort-select {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px; font-size: 13px;
+    font-family: inherit; background: var(--white);
+    cursor: pointer; outline: none;
+    color: var(--dark);
+  }
+  .btn {
+    padding: 10px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; border: none;
+    font-family: inherit; transition: opacity .2s;
+  }
+  .btn:hover { opacity: .85; }
+  .btn-primary { background: var(--navy); color: var(--white); }
+  .btn-gold { background: var(--gold); color: #000; }
+  .btn-outline { background: var(--white); color: var(--navy); border: 1px solid var(--border); }
+  .btn-green { background: var(--green); color: var(--white); }
+  .btn-red { background: var(--red); color: var(--white); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* ── AFFILIATE CARDS ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+  .aff-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    transition: box-shadow .2s;
+  }
+  .aff-card:hover { box-shadow: 0 4px 16px rgba(26,43,107,0.1); }
+  .aff-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+  .aff-name { font-size: 15px; font-weight: 700; color: var(--dark); }
+  .aff-company { font-size: 13px; color: var(--gray); margin-top: 2px; }
+  .industry-badge {
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px;
+    background: var(--light); color: var(--navy);
+    white-space: nowrap; flex-shrink: 0; margin-left: 8px;
+  }
+  .aff-contact { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .aff-contact a {
+    font-size: 13px; color: var(--periwinkle);
+    text-decoration: none; display: flex; align-items: center; gap: 6px;
+  }
+  .aff-contact a:hover { color: var(--navy); }
+  .aff-actions { display: flex; gap: 6px; margin-top: 12px; }
+  .admin-only { display: none; }
+  body.is-admin .admin-only { display: flex; }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+  }
+  .section-title { font-size: 20px; font-weight: 800; color: var(--dark); }
+  .section-count {
+    font-size: 13px; color: var(--gray); font-weight: 500;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 500; display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white); border-radius: 16px;
+    width: 100%; max-width: 520px;
+    padding: 32px; max-height: 90vh; overflow-y: auto;
+  }
+  .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 20px; color: var(--dark); }
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: .5px; }
+  .form-input {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; font-family: inherit; outline: none;
+    transition: border .2s;
+  }
+  .form-input:focus { border-color: var(--periwinkle); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+  /* ── INDUSTRY SEATS ── */
+  .seats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+  }
+  .seat-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .seat-name { font-size: 14px; font-weight: 600; color: var(--dark); }
+  .seat-count { font-size: 12px; color: var(--gray); margin-top: 2px; }
+  .seat-status {
+    font-size: 11px; font-weight: 700;
+    padding: 4px 10px; border-radius: 20px;
+  }
+  .seat-open { background: #D1FAE5; color: #065F46; }
+  .seat-filled { background: #FEE2E2; color: #991B1B; }
+
+  /* ── ANNOUNCEMENTS ── */
+  .announcement-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 22px; margin-bottom: 12px;
+  }
+  .ann-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+  .ann-title { font-size: 15px; font-weight: 700; color: var(--dark); }
+  .ann-type-badge {
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .ann-general { background: #EFF6FF; color: #1E40AF; }
+  .ann-urgent { background: #FEF2F2; color: #991B1B; }
+  .ann-event { background: #F0FDF4; color: #166534; }
+  .ann-body { font-size: 14px; color: var(--gray); line-height: 1.6; }
+  .ann-date { font-size: 12px; color: var(--gray); margin-top: 8px; }
+
+  /* ── EVENTS ── */
+  .event-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 22px; margin-bottom: 12px;
+    display: flex; gap: 18px; align-items: flex-start;
+  }
+  .event-date-box {
+    background: var(--navy); color: #fff;
+    border-radius: 10px; padding: 10px 14px;
+    text-align: center; flex-shrink: 0; min-width: 56px;
+  }
+  .event-month { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: .7; }
+  .event-day { font-size: 26px; font-weight: 900; line-height: 1; }
+  .event-info { flex: 1; }
+  .event-title { font-size: 15px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+  .event-meta { font-size: 13px; color: var(--gray); margin-bottom: 8px; }
+  .event-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--gray);
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-title { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+  .empty-text { font-size: 14px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--dark); color: #fff;
+    padding: 12px 20px; border-radius: 10px;
+    font-size: 14px; font-weight: 600;
+    z-index: 9999; opacity: 0;
+    transform: translateY(10px);
+    transition: opacity .3s, transform .3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── FOOTER ── */
+  .app-footer {
+    background: var(--footer);
+    padding: 20px 24px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 14px; flex-wrap: wrap;
+    margin-top: auto;
+  }
+  .footer-logo { height: 24px; }
+  .footer-text {
+    color: rgba(255,255,255,0.5);
+    font-size: 11px; text-align: center; line-height: 1.6;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .login-box { padding: 36px 24px; }
+    .content { padding: 16px 12px; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .controls { flex-direction: column; }
+    .search-input { min-width: unset; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen">
+  <video id="hero-video" autoplay muted loop playsinline>
+    <source src="https://www.pexels.com/download/video/31617700/" type="video/mp4" />
+  </video>
+  <div class="hero-overlay"></div>
+  <div class="login-box">
+    <img src="https://i.imgur.com/LpBodPi.png" alt="CORE AI" class="login-logo" />
+    <div class="login-org">Prince William Association of Realtors</div>
+    <div class="login-title">Affiliate Command Center</div>
+    <div class="login-sub">Powered by CORE AI</div>
+    <input type="password" id="pw-input" placeholder="Enter your access code" />
+    <button class="login-btn" onclick="doLogin()">Access System</button>
+    <div class="login-error" id="login-error">Incorrect access code. Please try again.</div>
+    <div class="login-badge">Secure · Members Only</div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+
+  <!-- Top Nav -->
+  <nav class="topnav">
+    <div class="topnav-logo">
+      <img src="https://i.imgur.com/LpBodPi.png" alt="CORE AI" />
+      <span class="topnav-title">PWAR Affiliate Command Center</span>
+    </div>
+    <span class="topnav-role" id="role-badge">Member</span>
+  </nav>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showTab('affiliates', this)">Affiliates</button>
+    <button class="tab-btn" onclick="showTab('seats', this)">Industry Seats</button>
+    <button class="tab-btn" onclick="showTab('announcements', this)">Announcements</button>
+    <button class="tab-btn" onclick="showTab('events', this)">Events</button>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- ── AFFILIATES TAB ── -->
+    <div id="tab-affiliates">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Affiliate Directory</div>
+          <div class="section-count" id="aff-count">0 affiliates</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-outline admin-only" onclick="copyEmails()">Copy All Emails</button>
+          <button class="btn btn-outline admin-only" onclick="exportCSV()">Export CSV</button>
+          <button class="btn btn-primary admin-only" onclick="openAddModal()">+ Add Affiliate</button>
+        </div>
+      </div>
+      <div class="controls">
+        <input class="search-input" type="text" id="aff-search" placeholder="Search affiliates, company, or industry..." oninput="renderAffiliates()" />
+        <select class="sort-select" id="aff-sort" onchange="renderAffiliates()">
+          <option value="name">Sort: Name A–Z</option>
+          <option value="company">Sort: Company A–Z</option>
+          <option value="industry">Sort: Industry A–Z</option>
+        </select>
+      </div>
+      <div class="cards-grid" id="affiliates-grid"></div>
+    </div>
+
+    <!-- ── INDUSTRY SEATS TAB ── -->
+    <div id="tab-seats" style="display:none;">
+      <div class="section-header">
+        <div class="section-title">Industry Seats</div>
+        <button class="btn btn-primary admin-only" onclick="openAddSeatModal()">+ Add Category</button>
+      </div>
+      <div class="seats-grid" id="seats-grid"></div>
+    </div>
+
+    <!-- ── ANNOUNCEMENTS TAB ── -->
+    <div id="tab-announcements" style="display:none;">
+      <div class="section-header">
+        <div class="section-title">Announcements</div>
+        <button class="btn btn-primary admin-only" onclick="openAnnModal()">+ Post Announcement</button>
+      </div>
+      <div id="announcements-list"></div>
+    </div>
+
+    <!-- ── EVENTS TAB ── -->
+    <div id="tab-events" style="display:none;">
+      <div class="section-header">
+        <div class="section-title">Events</div>
+        <button class="btn btn-primary admin-only" onclick="openEventModal()">+ Add Event</button>
+      </div>
+      <div id="events-list"></div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <img src="https://i.imgur.com/LpBodPi.png" alt="CORE AI" class="footer-logo" />
+    <div class="footer-text">
+      CORE AI | Core Response AI | Powerful Business Solutions | A Tayyab Group, Inc. Company · coreresponsegroup.com
+    </div>
+  </footer>
+</div>
+
+<!-- ── MODALS ── -->
+
+<!-- Add/Edit Affiliate -->
+<div class="modal-overlay" id="modal-affiliate">
+  <div class="modal">
+    <div class="modal-title" id="modal-aff-title">Add Affiliate</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">First Name</label>
+        <input class="form-input" id="f-first" placeholder="Jane" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last Name</label>
+        <input class="form-input" id="f-last" placeholder="Smith" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Company / Business Name</label>
+      <input class="form-input" id="f-company" placeholder="ABC Mortgage" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Industry / Category</label>
+      <input class="form-input" id="f-industry" placeholder="Mortgage, Title, Insurance..." />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input class="form-input" id="f-phone" placeholder="(703) 555-0100" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="f-email" placeholder="jane@abcmortgage.com" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Website (optional)</label>
+      <input class="form-input" id="f-website" placeholder="https://abcmortgage.com" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <input class="form-input" id="f-notes" placeholder="Specializes in VA loans..." />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-affiliate')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAffiliate()">Save Affiliate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Seat -->
+<div class="modal-overlay" id="modal-seat">
+  <div class="modal">
+    <div class="modal-title">Add Industry Category</div>
+    <div class="form-group">
+      <label class="form-label">Category Name</label>
+      <input class="form-input" id="s-name" placeholder="Home Inspection" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Max Seats (0 = unlimited)</label>
+      <input class="form-input" id="s-max" type="number" value="1" min="0" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-seat')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSeat()">Save Category</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Announcement -->
+<div class="modal-overlay" id="modal-ann">
+  <div class="modal">
+    <div class="modal-title">Post Announcement</div>
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input class="form-input" id="a-title" placeholder="Q3 Affiliate Mixer — Save the Date" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Body</label>
+      <textarea class="form-input" id="a-body" rows="4" placeholder="Details..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-input" id="a-type">
+        <option value="general">General</option>
+        <option value="urgent">Urgent</option>
+        <option value="event">Event</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-ann')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAnn()">Post</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Event -->
+<div class="modal-overlay" id="modal-event">
+  <div class="modal">
+    <div class="modal-title">Add Event</div>
+    <div class="form-group">
+      <label class="form-label">Event Title</label>
+      <input class="form-input" id="e-title" placeholder="PWAR Affiliate Networking Mixer" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" id="e-date" type="date" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Time</label>
+        <input class="form-input" id="e-time" placeholder="6:00 PM" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Location</label>
+      <input class="form-input" id="e-location" placeholder="Embassy Suites, Manassas, VA" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">RSVP Link (optional)</label>
+      <input class="form-input" id="e-rsvp" placeholder="https://..." />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-input" id="e-desc" rows="3" placeholder="Details..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-event')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Save Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── PASSWORDS ──
+const PASSWORDS = {
+  admin: 'pwar2026admin',
+  member: 'pwar2026'
+};
+
+let currentRole = null;
+let editingAffId = null;
+
+// ── DATA (localStorage) ──
+function load(key, def) {
+  try { return JSON.parse(localStorage.getItem(key)) || def; } catch { return def; }
+}
+function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+let affiliates = load('pwar_affiliates', [
+  { id: 1, first: 'Maria', last: 'Gonzalez', company: 'NoVA Title Group', industry: 'Title & Settlement', phone: '(703) 555-0101', email: 'maria@novatitle.com', website: '', notes: '' },
+  { id: 2, first: 'James', last: 'Thornton', company: 'First Heritage Mortgage', industry: 'Mortgage', phone: '(571) 555-0202', email: 'james@firstheritage.com', website: '', notes: 'Specializes in VA loans' },
+  { id: 3, first: 'Sarah', last: 'Kim', company: 'Kensington Home Inspections', industry: 'Home Inspection', phone: '(703) 555-0303', email: 'sarah@kensingtoni.com', website: '', notes: '' },
+  { id: 4, first: 'David', last: 'Okafor', company: 'AllState — Okafor Agency', industry: 'Insurance', phone: '(571) 555-0404', email: 'david.okafor@allstate.com', website: '', notes: '' },
+  { id: 5, first: 'Lisa', last: 'Patel', company: 'Clarity Photography', industry: 'Photography', phone: '(703) 555-0505', email: 'lisa@clarityphotos.com', website: '', notes: 'Real estate & listing photos' },
+  { id: 6, first: 'Tom', last: 'Rivera', company: 'Piedmont Moving Co.', industry: 'Moving Services', phone: '(571) 555-0606', email: 'tom@piedmontmoving.com', website: '', notes: '' },
+]);
+let seats = load('pwar_seats', [
+  { id: 1, name: 'Mortgage', max: 3 },
+  { id: 2, name: 'Title & Settlement', max: 2 },
+  { id: 3, name: 'Home Inspection', max: 2 },
+  { id: 4, name: 'Insurance', max: 2 },
+  { id: 5, name: 'Photography', max: 1 },
+  { id: 6, name: 'Moving Services', max: 1 },
+  { id: 7, name: 'Home Warranty', max: 1 },
+  { id: 8, name: 'Staging', max: 1 },
+  { id: 9, name: 'Contractor / Handyman', max: 2 },
+  { id: 10, name: 'Landscaping', max: 1 },
+]);
+let announcements = load('pwar_announcements', [
+  { id: 1, title: 'Welcome to the PWAR Affiliate Command Center', body: 'This is your central hub for the affiliate network. Bookmark this page and check back for updates, events, and directory changes.', type: 'general', date: '2026-06-23' }
+]);
+let events = load('pwar_events', [
+  { id: 1, title: 'PWAR Affiliate Networking Mixer', date: '2026-07-15', time: '6:00 PM', location: 'Bloxton\'s Restaurant, Manassas, VA', rsvp: '', desc: 'Join fellow affiliates and PWAR members for an evening of networking and community building.' }
+]);
+
+// ── LOGIN ──
+function doLogin() {
+  const val = document.getElementById('pw-input').value.trim();
+  if (val === PASSWORDS.admin) { currentRole = 'admin'; launchApp(); }
+  else if (val === PASSWORDS.member) { currentRole = 'member'; launchApp(); }
+  else {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+  }
+}
+document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+function launchApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'flex';
+  document.getElementById('role-badge').textContent = currentRole === 'admin' ? 'Admin' : 'Member';
+  if (currentRole === 'admin') document.body.classList.add('is-admin');
+  renderAll();
+}
+
+// ── TABS ──
+function showTab(name, btn) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).style.display = '';
+  btn.classList.add('active');
+}
+
+// ── RENDER ALL ──
+function renderAll() {
+  renderAffiliates();
+  renderSeats();
+  renderAnnouncements();
+  renderEvents();
+}
+
+// ── AFFILIATES ──
+function renderAffiliates() {
+  const q = (document.getElementById('aff-search')?.value || '').toLowerCase();
+  const sort = document.getElementById('aff-sort')?.value || 'name';
+  let list = [...affiliates];
+  if (q) list = list.filter(a =>
+    `${a.first} ${a.last} ${a.company} ${a.industry}`.toLowerCase().includes(q)
+  );
+  list.sort((a, b) => {
+    if (sort === 'name') return `${a.last}${a.first}`.localeCompare(`${b.last}${b.first}`);
+    if (sort === 'company') return a.company.localeCompare(b.company);
+    if (sort === 'industry') return a.industry.localeCompare(b.industry);
+    return 0;
+  });
+  document.getElementById('aff-count').textContent = `${list.length} affiliate${list.length !== 1 ? 's' : ''}`;
+  const grid = document.getElementById('affiliates-grid');
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🏢</div><div class="empty-title">No affiliates found</div><div class="empty-text">Try adjusting your search.</div></div>`;
+    return;
+  }
+  grid.innerHTML = list.map(a => `
+    <div class="aff-card">
+      <div class="aff-card-top">
+        <div>
+          <div class="aff-name">${a.first} ${a.last}</div>
+          <div class="aff-company">${a.company}</div>
+        </div>
+        <span class="industry-badge">${a.industry}</span>
+      </div>
+      <div class="aff-contact">
+        ${a.phone ? `<a href="tel:${a.phone}">📞 ${a.phone}</a>` : ''}
+        ${a.email ? `<a href="mailto:${a.email}">✉️ ${a.email}</a>` : ''}
+        ${a.website ? `<a href="${a.website}" target="_blank">🌐 Website</a>` : ''}
+      </div>
+      ${a.notes ? `<div style="font-size:12px;color:var(--gray);margin-top:8px;font-style:italic;">${a.notes}</div>` : ''}
+      <div class="aff-actions admin-only">
+        <button class="btn btn-outline btn-sm" onclick="editAffiliate(${a.id})">Edit</button>
+        <button class="btn btn-red btn-sm" onclick="deleteAffiliate(${a.id})">Remove</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddModal() {
+  editingAffId = null;
+  document.getElementById('modal-aff-title').textContent = 'Add Affiliate';
+  ['first','last','company','industry','phone','email','website','notes'].forEach(f => document.getElementById('f-'+f).value = '');
+  openModal('modal-affiliate');
+}
+function editAffiliate(id) {
+  const a = affiliates.find(x => x.id === id);
+  if (!a) return;
+  editingAffId = id;
+  document.getElementById('modal-aff-title').textContent = 'Edit Affiliate';
+  document.getElementById('f-first').value = a.first;
+  document.getElementById('f-last').value = a.last;
+  document.getElementById('f-company').value = a.company;
+  document.getElementById('f-industry').value = a.industry;
+  document.getElementById('f-phone').value = a.phone;
+  document.getElementById('f-email').value = a.email;
+  document.getElementById('f-website').value = a.website;
+  document.getElementById('f-notes').value = a.notes;
+  openModal('modal-affiliate');
+}
+function saveAffiliate() {
+  const obj = {
+    first: document.getElementById('f-first').value.trim(),
+    last: document.getElementById('f-last').value.trim(),
+    company: document.getElementById('f-company').value.trim(),
+    industry: document.getElementById('f-industry').value.trim(),
+    phone: document.getElementById('f-phone').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    website: document.getElementById('f-website').value.trim(),
+    notes: document.getElementById('f-notes').value.trim(),
+  };
+  if (!obj.first || !obj.last || !obj.company) { showToast('First name, last name, and company are required.'); return; }
+  if (editingAffId) {
+    const idx = affiliates.findIndex(x => x.id === editingAffId);
+    affiliates[idx] = { ...affiliates[idx], ...obj };
+  } else {
+    obj.id = Date.now();
+    affiliates.push(obj);
+  }
+  save('pwar_affiliates', affiliates);
+  closeModal('modal-affiliate');
+  renderAffiliates();
+  renderSeats();
+  showToast(editingAffId ? 'Affiliate updated.' : 'Affiliate added.');
+}
+function deleteAffiliate(id) {
+  if (!confirm('Remove this affiliate?')) return;
+  affiliates = affiliates.filter(x => x.id !== id);
+  save('pwar_affiliates', affiliates);
+  renderAffiliates();
+  renderSeats();
+  showToast('Affiliate removed.');
+}
+function copyEmails() {
+  const emails = affiliates.filter(a => a.email).map(a => a.email).join(', ');
+  navigator.clipboard.writeText(emails).then(() => showToast('All emails copied to clipboard.'));
+}
+function exportCSV() {
+  const headers = ['First','Last','Company','Industry','Phone','Email','Website','Notes'];
+  const rows = affiliates.map(a => [a.first,a.last,a.company,a.industry,a.phone,a.email,a.website,a.notes].map(v => `"${v}"`).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'pwar-affiliates.csv';
+  a.click();
+  showToast('CSV downloaded.');
+}
+
+// ── SEATS ──
+function renderSeats() {
+  const grid = document.getElementById('seats-grid');
+  const sorted = [...seats].sort((a,b) => a.name.localeCompare(b.name));
+  grid.innerHTML = sorted.map(s => {
+    const filled = affiliates.filter(a => a.industry.toLowerCase() === s.name.toLowerCase()).length;
+    const open = s.max === 0 ? true : filled < s.max;
+    return `
+      <div class="seat-card">
+        <div>
+          <div class="seat-name">${s.name}</div>
+          <div class="seat-count">${filled} filled${s.max > 0 ? ` of ${s.max}` : ''}</div>
+        </div>
+        <span class="seat-status ${open ? 'seat-open' : 'seat-filled'}">${open ? 'Open' : 'Filled'}</span>
+      </div>
+    `;
+  }).join('');
+}
+function openAddSeatModal() {
+  document.getElementById('s-name').value = '';
+  document.getElementById('s-max').value = '1';
+  openModal('modal-seat');
+}
+function saveSeat() {
+  const name = document.getElementById('s-name').value.trim();
+  const max = parseInt(document.getElementById('s-max').value) || 0;
+  if (!name) { showToast('Category name required.'); return; }
+  seats.push({ id: Date.now(), name, max });
+  save('pwar_seats', seats);
+  closeModal('modal-seat');
+  renderSeats();
+  showToast('Category added.');
+}
+
+// ── ANNOUNCEMENTS ──
+function renderAnnouncements() {
+  const list = document.getElementById('announcements-list');
+  const sorted = [...announcements].sort((a,b) => b.date.localeCompare(a.date));
+  if (!sorted.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📢</div><div class="empty-title">No announcements yet</div></div>`;
+    return;
+  }
+  list.innerHTML = sorted.map(a => `
+    <div class="announcement-card">
+      <div class="ann-header">
+        <div class="ann-title">${a.title}</div>
+        <span class="ann-type-badge ann-${a.type}">${a.type.charAt(0).toUpperCase()+a.type.slice(1)}</span>
+      </div>
+      <div class="ann-body">${a.body}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+        <div class="ann-date">${formatDate(a.date)}</div>
+        ${currentRole === 'admin' ? `<button class="btn btn-red btn-sm" onclick="deleteAnn(${a.id})">Delete</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+function openAnnModal() {
+  ['title','body'].forEach(f => document.getElementById('a-'+f).value = '');
+  document.getElementById('a-type').value = 'general';
+  openModal('modal-ann');
+}
+function saveAnn() {
+  const title = document.getElementById('a-title').value.trim();
+  const body = document.getElementById('a-body').value.trim();
+  const type = document.getElementById('a-type').value;
+  if (!title || !body) { showToast('Title and body required.'); return; }
+  announcements.push({ id: Date.now(), title, body, type, date: new Date().toISOString().split('T')[0] });
+  save('pwar_announcements', announcements);
+  closeModal('modal-ann');
+  renderAnnouncements();
+  showToast('Announcement posted.');
+}
+function deleteAnn(id) {
+  if (!confirm('Delete this announcement?')) return;
+  announcements = announcements.filter(a => a.id !== id);
+  save('pwar_announcements', announcements);
+  renderAnnouncements();
+  showToast('Announcement deleted.');
+}
+
+// ── EVENTS ──
+function renderEvents() {
+  const list = document.getElementById('events-list');
+  const sorted = [...events].sort((a,b) => a.date.localeCompare(b.date));
+  if (!sorted.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">No events scheduled</div></div>`;
+    return;
+  }
+  list.innerHTML = sorted.map(e => {
+    const d = new Date(e.date + 'T00:00:00');
+    const month = d.toLocaleString('default', { month: 'short' }).toUpperCase();
+    const day = d.getDate();
+    return `
+      <div class="event-card">
+        <div class="event-date-box">
+          <div class="event-month">${month}</div>
+          <div class="event-day">${day}</div>
+        </div>
+        <div class="event-info">
+          <div class="event-title">${e.title}</div>
+          <div class="event-meta">📍 ${e.location} &nbsp;·&nbsp; 🕕 ${e.time}</div>
+          ${e.desc ? `<div style="font-size:13px;color:var(--gray);margin-bottom:8px;">${e.desc}</div>` : ''}
+          <div class="event-actions">
+            ${e.rsvp ? `<a href="${e.rsvp}" target="_blank" class="btn btn-gold btn-sm">RSVP</a>` : ''}
+            ${currentRole === 'admin' ? `<button class="btn btn-red btn-sm" onclick="deleteEvent(${e.id})">Delete</button>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+function openEventModal() {
+  ['title','time','location','rsvp','desc'].forEach(f => document.getElementById('e-'+f).value = '');
+  document.getElementById('e-date').value = '';
+  openModal('modal-event');
+}
+function saveEvent() {
+  const title = document.getElementById('e-title').value.trim();
+  const date = document.getElementById('e-date').value;
+  const time = document.getElementById('e-time').value.trim();
+  const location = document.getElementById('e-location').value.trim();
+  const rsvp = document.getElementById('e-rsvp').value.trim();
+  const desc = document.getElementById('e-desc').value.trim();
+  if (!title || !date) { showToast('Title and date required.'); return; }
+  events.push({ id: Date.now(), title, date, time, location, rsvp, desc });
+  save('pwar_events', events);
+  closeModal('modal-event');
+  renderEvents();
+  showToast('Event added.');
+}
+function deleteEvent(id) {
+  if (!confirm('Delete this event?')) return;
+  events = events.filter(e => e.id !== id);
+  save('pwar_events', events);
+  renderEvents();
+  showToast('Event deleted.');
+}
+
+// ── UTILS ──
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function formatDate(str) {
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+</script>
+</body>
+</html>
